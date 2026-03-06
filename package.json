@@ -1,10 +1,11 @@
 {
   "name": "amifi-slm-node",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
- "infer": "ts-node src/infer.ts",
+ "infer": "node --loader ts-node/esm src/infer.ts",
  "perf": "ts-node src/perf.ts",
  "eval": "ts-node eval/run_eval.ts",
  "test": "jest"
