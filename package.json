@@ -5,11 +5,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
- "infer": "node --loader ts-node/esm src/infer.ts",
- "perf": "ts-node src/perf.ts",
- "eval": "ts-node eval/run_eval.ts",
- "test": "jest"
-},
+    "infer": "node --loader ts-node/esm src/infer.ts",
+    "perf": "ts-node src/perf.ts",
+    "eval": "ts-node eval/run_eval.ts",
+    "test": "jest"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

@@ -13,14 +13,42 @@ export class EdgeSLM {
 
     const start = Date.now()
 
-    this.session = await ort.InferenceSession.create(
-      this.modelPath,
-      { executionProviders: ["cpu"] }
-    )
+    try {
 
-    const loadTime = Date.now() - start
+      this.session = await ort.InferenceSession.create(
+        this.modelPath,
+        { executionProviders: ["cpu"] }
+      )
 
-    console.log(`Model loaded in ${loadTime} ms`)
+      const loadTime = Date.now() - start
+
+      console.log(`Model loaded in ${loadTime} ms`)
+
+    } catch (error) {
+
+      console.error("Failed to load model:", error)
+
+    }
+
+  }
+
+  async generate(prompt: string) {
+
+    if (!this.session) {
+      throw new Error("Model not loaded")
+    }
+
+    const start = Date.now()
+
+    const feeds: Record<string, ort.Tensor> = {}
+
+    const results = await this.session.run(feeds)
+
+    const latency = Date.now() - start
+
+    console.log(`Inference latency: ${latency} ms`)
+
+    return JSON.stringify(results)
   }
 
 }
@@ -31,6 +59,14 @@ async function test() {
 
   await model.loadModel()
 
+  if (!model.session) {
+    console.log("Model not loaded. Exiting.")
+    return
+  }
+
+  const output = await model.generate("test prompt")
+
+  console.log("Output:", output)
 }
 
 test()
