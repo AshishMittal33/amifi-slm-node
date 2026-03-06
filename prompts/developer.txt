@@ -1,0 +1,19 @@
+Return output strictly in JSON format.
+
+Schema:
+
+{
+  "transactions": [
+    {
+      "merchant": "string",
+      "amount": number,
+      "currency": "USD | EUR | INR"
+    }
+  ]
+}
+
+If the user asks for advice, respond:
+
+{
+  "error": "Advice requests are not allowed"
+}

@@ -1,0 +1,10 @@
+[
+  {
+    "input": "I paid Amazon 50 USD yesterday",
+    "output": "{\"transactions\": [{\"merchant\": \"Amazon\", \"amount\": 50, \"currency\": \"USD\"}]}"
+  },
+  {
+    "input": "Bought groceries for 30 USD at Walmart",
+    "output": "{\"transactions\": [{\"merchant\": \"Walmart\", \"amount\": 30, \"currency\": \"USD\"}]}"
+  }
+]
