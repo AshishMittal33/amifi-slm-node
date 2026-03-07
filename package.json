@@ -7,7 +7,7 @@
   "scripts": {
     "infer": "node --loader ts-node/esm src/infer.ts",
     "perf": "node --loader ts-node/esm src/perf.ts",
-    "eval": "ts-node eval/run_eval.ts",
+    "eval": "node --loader ts-node/esm eval/run_eval.ts",
     "test": "jest"
   },
   "keywords": [],
