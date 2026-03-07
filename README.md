@@ -4,14 +4,16 @@
 
 This project implements a minimal **Edge Small Language Model (SLM) inference pipeline** using **Node.js + TypeScript + ONNX Runtime**.
 
-The goal is to demonstrate:
+The system demonstrates a lightweight **edge inference architecture** capable of:
 
-* Local ONNX model inference
-* Deterministic JSON extraction
+* Local ONNX model execution
 * Prompt-based structured extraction
-* Performance awareness for edge deployments
+* Deterministic JSON validation
+* Performance benchmarking
+* Evaluation harness
+* Reproducible artifact bundling
 
-This repository satisfies the **Checkpoint 1 (Project Initialization)** and **Checkpoint 2 (Core Engine Milestone)** requirements.
+The project is designed to simulate a **transaction extraction LLM pipeline** suitable for edge environments.
 
 ---
 
@@ -24,6 +26,7 @@ src/
   infer.ts
   prompt.ts
   extractor.ts
+  perf.ts
 
 model/
   model.onnx
@@ -34,6 +37,24 @@ prompts/
   developer.txt
   fewshot.json
 
+eval/
+  run_eval.ts
+  report.json
+  report.md
+
+perf/
+  report.json
+
+bundle/
+  make_bundle.ts
+
+dist/
+  bundle.zip
+  manifest.json
+
+tests/
+  regression.test.ts
+
 package.json
 README.md
 ```
@@ -42,7 +63,7 @@ README.md
 
 # Environment
 
-Local environment used for development:
+Local environment used during development:
 
 ```
 Node.js: v22
@@ -51,7 +72,7 @@ Language: TypeScript
 Execution Provider: CPU
 ```
 
-Operating system used:
+Operating System:
 
 ```
 Windows 11
@@ -73,7 +94,7 @@ Source:
 https://huggingface.co/Xenova/distilbert-base-uncased
 ```
 
-Downloaded files:
+Files included:
 
 ```
 model/model.onnx
@@ -83,7 +104,7 @@ model/tokenizer.json
 Model size:
 
 ```
-~67MB
+~67 MB
 ```
 
 This satisfies the assignment requirement:
@@ -96,7 +117,7 @@ model ≤ 120MB
 
 # Installation
 
-Clone the repository:
+Clone repository:
 
 ```
 git clone <your-repo-url>
@@ -113,28 +134,39 @@ npm install
 
 # Running Inference
 
-Run the CLI command:
+Run inference from CLI:
 
 ```
-npm run infer
+npm run infer "I paid Uber 25 USD"
 ```
 
 Example output:
 
 ```
-Model loaded in 202 ms
+Model loaded in 195 ms
 Inference latency: 0 ms
 Tokens/sec estimate: 100
 
-Output:
-{"transactions":[{"merchant":"Amazon","amount":50,"currency":"USD"}]}
+Final Output:
+{
+  "transactions": [
+    {
+      "merchant": "Uber",
+      "amount": 25,
+      "currency": "USD"
+    }
+  ],
+  "confidence": 0.95
+}
 ```
+
+<img width="1231" height="398" alt="Image" src="https://github.com/user-attachments/assets/edbb4fd3-fb1c-4ec2-9416-1daee0c1c8b5" />
 
 ---
 
 # Prompt System
 
-Prompt construction is handled in:
+Prompt construction is implemented in:
 
 ```
 src/prompt.ts
@@ -148,28 +180,42 @@ prompts/developer.txt
 prompts/fewshot.json
 ```
 
-These are combined to build a structured prompt for the model.
+Prompt flow:
+
+```
+system prompt
+↓
+developer instructions
+↓
+few-shot examples
+↓
+user input
+↓
+final prompt
+```
+
+The prompt guides the extraction engine to produce structured JSON output.
 
 ---
 
 # Extraction Pipeline
 
-Structured JSON extraction is implemented in:
+Extraction validation is implemented in:
 
 ```
 src/extractor.ts
 ```
 
-Validation rules:
+The extractor enforces deterministic rules:
 
-* Maximum 3 transactions
-* Currency enum enforcement
-* JSON schema validation
-* Prompt injection detection
-* Advice refusal logic
-* Confidence score added to output
+* Maximum **3 transactions**
+* Currency must be **USD / EUR / INR**
+* Strict **JSON schema validation**
+* **Prompt injection detection**
+* **Advice request refusal**
+* Confidence scoring
 
-Example valid output:
+Example validated output:
 
 ```
 {
@@ -186,71 +232,146 @@ Example valid output:
 
 ---
 
-# Core Engine Pipeline
-
-Current pipeline architecture:
+# Core Pipeline Architecture
 
 ```
-User Input
+CLI Input
    ↓
 PromptBuilder
    ↓
 EdgeSLM.generate()
    ↓
-Extractor
+Few-shot guided extraction
    ↓
-Validated JSON Output
+Extractor validation
+   ↓
+Final JSON output
 ```
 
 ---
 
-# Checkpoint Status
+# Performance Benchmark
 
-## Checkpoint 1 — Project Initialization
+Performance testing is implemented in:
 
-Requirements satisfied:
+```
+src/perf.ts
+```
 
-* Project repository created
-* ONNX runtime installed
-* Model loading implemented
-* Basic repo structure completed
-* Project compiles and runs
+Run benchmark:
+
+```
+npm run perf
+```
+
+Metrics measured:
+
+* Model cold start time
+* Average inference latency
+* Maximum inference latency
+* Estimated tokens/sec
+* Memory usage
+
+Results stored in:
+
+```
+perf/report.json
+```
+
+<img width="1164" height="838" alt="Image" src="https://github.com/user-attachments/assets/00bfc2b6-a2fc-4973-8a41-45f3b45e81e7" />
+
+---
+
+# Evaluation Harness
+
+Evaluation script:
+
+```
+eval/run_eval.ts
+```
+
+Run evaluation:
+
+```
+npm run eval
+```
+
+The harness runs **25 synthetic samples** and measures:
+
+* JSON validity rate
+* Advice refusal accuracy
+* Multi-transaction truncation correctness
+
+Outputs:
+
+```
+eval/report.json
+eval/report.md
+```
+
+<img width="1210" height="950" alt="Image" src="https://github.com/user-attachments/assets/7357bce4-83bd-4334-99c5-1e18033d13a6" />
 
 ---
 
-## Checkpoint 2 — Core Engine Milestone
+# Regression Tests
 
-Requirements satisfied:
+Basic regression tests validate the extraction rules.
 
-* CLI command `npm run infer`
-* ONNX model loads successfully
-* Inference execution completed
-* Prompt system implemented
-* JSON output produced
+Run tests:
+
+```
+node --loader ts-node/esm tests/regression.test.ts
+```
+
+Tests cover:
+
+* Valid transaction parsing
+* Currency enum validation
+* Prompt injection handling
+
+---
+
+# Reproducible Artifact Bundle
+
+To generate a portable artifact bundle:
+
+```
+npm run bundle
+```
+
+This produces:
+
+```
+dist/bundle.zip
+dist/manifest.json
+```
+
+Bundle contents:
+
+```
+model/
+prompts/
+src/
+```
+
+The manifest file stores **SHA256 hashes** for artifact verification.
 
 ---
 
-# Next Steps (Remaining Tasks)
-
-The following components will be implemented in later stages:
-
-* Performance benchmark (`src/perf.ts`)
-* Evaluation harness (`eval/run_eval.ts`)
-* Regression tests
-* Reproducible artifact bundle
-
----
 
 # Tools Used
 
-Development assistance tools:
+* Node.js
+* TypeScript
+* ONNX Runtime
+* HuggingFace Model Hub
+
+Development assistance:
 
 * ChatGPT (architecture guidance)
-* HuggingFace model repository
-* ONNX Runtime
 
 ---
 
 # Author
 
-Ashish Mittal
+**Ashish Mittal**
