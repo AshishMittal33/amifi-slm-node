@@ -1,32 +1,33 @@
 import fs from "fs"
 
-export class PromptBuilder {
+export function buildPrompt(userInput: string): string {
 
-  systemPromptPath = "./prompts/system.txt"
-  developerPromptPath = "./prompts/developer.txt"
-  fewshotPath = "./prompts/fewshot.json"
+  const system = fs.readFileSync(
+    "./prompts/system.txt",
+    "utf-8"
+  )
 
-  readFile(path: string): string {
-    return fs.readFileSync(path, "utf-8")
+  const developer = fs.readFileSync(
+    "./prompts/developer.txt",
+    "utf-8"
+  )
+
+  const fewshot = JSON.parse(
+    fs.readFileSync(
+      "./prompts/fewshot.json",
+      "utf-8"
+    )
+  )
+
+  let examples = ""
+
+  for (const ex of fewshot) {
+
+    examples += `User: ${ex.input}\nAssistant: ${ex.output}\n\n`
+
   }
 
-  buildPrompt(userInput: string): string {
-
-    const system = this.readFile(this.systemPromptPath)
-
-    const developer = this.readFile(this.developerPromptPath)
-
-    const fewshot = JSON.parse(
-      this.readFile(this.fewshotPath)
-    )
-
-    let examples = ""
-
-    for (const ex of fewshot) {
-      examples += `User: ${ex.input}\nAssistant: ${ex.output}\n\n`
-    }
-
-    const finalPrompt = `
+  const prompt = `
 ${system}
 
 ${developer}
@@ -38,13 +39,5 @@ User: ${userInput}
 Assistant:
 `
 
-    return finalPrompt
-  }
-
+  return prompt
 }
-
-const builder = new PromptBuilder()
-
-const prompt = builder.buildPrompt("I paid Uber 20 USD yesterday")
-
-console.log(prompt)

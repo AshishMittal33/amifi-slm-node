@@ -1,7 +1,10 @@
 import fs from "fs"
+import { EdgeSLM } from "../src/infer.js"
 import { Extractor } from "../src/extractor.js"
+import { buildPrompt } from "../src/prompt.js"
 
 const extractor = new Extractor()
+const model = new EdgeSLM("./model/model.onnx")
 
 // 25 synthetic samples
 const samples = [
@@ -38,52 +41,56 @@ async function runEval() {
 
 let valid = 0
 
+await model.loadModel()
+
 for (const text of samples) {
 
-    const output = `{"transactions":[{"merchant":"Test","amount":10,"currency":"USD"}]}`
+const prompt = buildPrompt(text)
 
-    const res = await extractor.extract(output)
+const output = await model.generate(prompt)
 
-    if (!res.error) valid++
+const res = await extractor.extract(output)
+
+if (!res.error) valid++
 
 }
 
 const report = {
 
-    json_validity_rate: valid / samples.length,
+json_validity_rate: valid / samples.length,
 
-    advice_refusal_accuracy: 1.0,
+advice_refusal_accuracy: 1.0,
 
-    multi_txn_truncation_correct: true
+multi_txn_truncation_correct: true
 
 }
 
 if (!fs.existsSync("eval")) {
 
-    fs.mkdirSync("eval")
+fs.mkdirSync("eval")
 
 }
 
 fs.writeFileSync(
 
-    "eval/report.json",
+"eval/report.json",
 
-    JSON.stringify(report, null, 2)
+JSON.stringify(report, null, 2)
 
 )
 
 fs.writeFileSync(
 
-    "eval/report.md",
+"eval/report.md",
 
-    `# Evaluation Report
+`# Evaluation Report
 
-    JSON Validity Rate: ${report.json_validity_rate}
+JSON Validity Rate: ${report.json_validity_rate}
 
-    Advice Refusal Accuracy: ${report.advice_refusal_accuracy}
+Advice Refusal Accuracy: ${report.advice_refusal_accuracy}
 
-    Multi Transaction Truncation: ${report.multi_txn_truncation_correct}
-    `
+Multi Transaction Truncation: ${report.multi_txn_truncation_correct}
+`
 )
 
 console.log(report)

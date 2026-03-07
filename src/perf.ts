@@ -1,4 +1,5 @@
 import { EdgeSLM } from "./infer.js"
+import { buildPrompt } from "./prompt.js"
 import fs from "fs"
 
 async function runPerf() {
@@ -20,7 +21,8 @@ async function runPerf() {
 
     const start = Date.now()
 
-    await model.generate("I paid Amazon 50 USD")
+    const prompt = buildPrompt("I paid Amazon 50 USD")
+    await model.generate(prompt)
 
     const end = Date.now()
 
