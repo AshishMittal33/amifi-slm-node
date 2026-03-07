@@ -8,17 +8,20 @@
     "infer": "node --loader ts-node/esm src/infer.ts",
     "perf": "node --loader ts-node/esm src/perf.ts",
     "eval": "node --loader ts-node/esm eval/run_eval.ts",
-    "test": "jest"
+    "bundle": "node --loader ts-node/esm bundle/make_bundle.ts",
+    "test": "node --loader ts-node/esm tests/regression.test.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "ajv": "^8.18.0",
+    "archiver": "^7.0.1",
     "onnxruntime-node": "^1.24.3"
   },
   "devDependencies": {
     "@types/ajv": "^0.0.5",
+    "@types/archiver": "^7.0.0",
     "@types/node": "^25.3.5",
     "jest": "^30.2.0",
     "ts-jest": "^29.4.6",
