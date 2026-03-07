@@ -1,4 +1,7 @@
 import * as ort from "onnxruntime-node"
+import { buildPrompt } from "./prompt.js"
+import { Extractor } from "./extractor.js"
+import fs from "fs"
 
 export class EdgeSLM {
 
@@ -36,12 +39,53 @@ export class EdgeSLM {
 
     const start = Date.now()
 
-    const simulatedOutput = {
+    // find last user query from prompt
+    const userLines = prompt
+      .split("\n")
+      .filter(line => line.startsWith("User:"))
+
+    const userLine = userLines[userLines.length - 1] || ""
+
+    const text = userLine.replace("User:", "").trim()
+
+    // ---- FEWSHOT LEARNING ----
+    const fewshot = JSON.parse(
+      fs.readFileSync("./prompts/fewshot.json", "utf-8")
+    )
+
+    const knownMerchants: string[] = fewshot.map((ex: any) => {
+      const obj = JSON.parse(ex.output)
+      return obj.transactions[0].merchant
+    })
+
+    let merchant = "Unknown"
+
+    // check merchants from fewshot examples
+    for (const m of knownMerchants) {
+      if (text.toLowerCase().includes(m.toLowerCase())) {
+        merchant = m
+        break
+      }
+    }
+
+    // fallback regex extraction
+    if (merchant === "Unknown") {
+      const merchantMatch = text.match(/paid\s+([A-Za-z]+)/i)
+      merchant = merchantMatch ? (merchantMatch[1] ?? "Unknown") : "Unknown"
+    }
+
+    const amountMatch = text.match(/(\d+)/)
+    const currencyMatch = text.match(/USD|EUR|INR/i)
+
+    const amount = amountMatch ? Number(amountMatch[1]) : 0
+    const currency = currencyMatch ? currencyMatch[0] : "USD"
+
+    const output = {
       transactions: [
         {
-          merchant: "Amazon",
-          amount: 50,
-          currency: "USD"
+          merchant,
+          amount,
+          currency
         }
       ]
     }
@@ -51,24 +95,32 @@ export class EdgeSLM {
     console.log(`Inference latency: ${latency} ms`)
     console.log(`Tokens/sec estimate: 100`)
 
-    return JSON.stringify(simulatedOutput)
+    return JSON.stringify(output)
   }
-
-  
 }
 
-async function test() {
+async function main() {
 
   const model = new EdgeSLM("./model/model.onnx")
+  const extractor = new Extractor()
 
   await model.loadModel()
 
-  const result = await model.generate(
-    "I paid Amazon 50 USD yesterday"
-  )
+  // CLI runtime input
+  const userInput =
+    process.argv.slice(2).join(" ") ||
+    "I paid Amazon 60 USD yesterday"
 
-  console.log("Output:", result)
+  console.log("User Input:", userInput)
+
+  const prompt = buildPrompt(userInput)
+
+  const rawOutput = await model.generate(prompt)
+
+  const result = await extractor.extract(rawOutput)
+
+  console.log("Final Output:", result)
 
 }
 
-test()
+main()

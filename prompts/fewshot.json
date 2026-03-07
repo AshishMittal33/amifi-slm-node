@@ -1,6 +1,6 @@
 [
   {
-    "input": "I paid Amazon 50 USD yesterday",
+    "input": "I paid Amazon 70 USD yesterday",
     "output": "{\"transactions\": [{\"merchant\": \"Amazon\", \"amount\": 50, \"currency\": \"USD\"}]}"
   },
   {
