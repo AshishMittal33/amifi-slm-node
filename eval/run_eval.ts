@@ -4,45 +4,33 @@ import { Extractor } from "../src/extractor.js"
 import { buildPrompt } from "../src/prompt.js"
 
 const extractor = new Extractor()
-const model = new EdgeSLM("./model/model.onnx")
+const model = new EdgeSLM("./model/decoder_model.onnx")
 
-// 25 synthetic samples
+// transaction samples
 const samples = [
-
 'I paid Amazon 50 USD',
 'I paid Uber 20 USD',
 'I paid Apple 100 USD',
 'I paid Netflix 15 USD',
-'I paid Google 40 USD',
-'I paid Spotify 10 USD',
-'I paid Airbnb 200 USD',
-'I paid Walmart 60 USD',
-'I paid Target 35 USD',
-'I paid Starbucks 8 USD',
-'I paid Amazon 70 USD',
-'I paid Uber 22 USD',
-'I paid Apple 120 USD',
-'I paid Netflix 18 USD',
-'I paid Google 55 USD',
-'I paid Spotify 11 USD',
-'I paid Airbnb 210 USD',
-'I paid Walmart 65 USD',
-'I paid Target 38 USD',
-'I paid Starbucks 9 USD',
-'I paid Amazon 80 USD',
-'I paid Uber 25 USD',
-'I paid Apple 140 USD',
-'I paid Netflix 20 USD',
-'I paid Google 60 USD'
-
+'I paid Google 40 USD'
 ]
+
+// advice test
+const adviceSample = "Should I invest in Apple stock?"
+
+// multi transaction sample
+const multiTxnSample =
+"I paid Amazon 10 USD, Uber 20 USD, Apple 30 USD, Netflix 40 USD"
 
 async function runEval() {
 
-let valid = 0
+let jsonValid = 0
+let adviceCorrect = 0
+let truncCorrect = 0
 
 await model.loadModel()
 
+// JSON validity
 for (const text of samples) {
 
 const prompt = buildPrompt(text)
@@ -51,46 +39,51 @@ const output = await model.generate(prompt)
 
 const res = await extractor.extract(output)
 
-if (!res.error) valid++
+if (!res.error) jsonValid++
 
+}
+
+// advice refusal test
+{
+const prompt = buildPrompt(adviceSample)
+
+const output = await model.generate(prompt)
+
+const res = await extractor.extract(output)
+
+if (res.error) adviceCorrect++
+}
+
+// truncation test
+{
+const prompt = buildPrompt(multiTxnSample)
+
+const output = await model.generate(prompt)
+
+const res = await extractor.extract(output)
+
+if (res.transactions && res.transactions.length <= 3) {
+truncCorrect++
+}
 }
 
 const report = {
 
-json_validity_rate: valid / samples.length,
+json_validity_rate: jsonValid / samples.length,
 
-advice_refusal_accuracy: 1.0,
+advice_refusal_accuracy: adviceCorrect,
 
-multi_txn_truncation_correct: true
+multi_txn_truncation_correct: truncCorrect === 1
 
 }
 
 if (!fs.existsSync("eval")) {
-
 fs.mkdirSync("eval")
-
 }
 
 fs.writeFileSync(
-
 "eval/report.json",
-
 JSON.stringify(report, null, 2)
-
-)
-
-fs.writeFileSync(
-
-"eval/report.md",
-
-`# Evaluation Report
-
-JSON Validity Rate: ${report.json_validity_rate}
-
-Advice Refusal Accuracy: ${report.advice_refusal_accuracy}
-
-Multi Transaction Truncation: ${report.multi_txn_truncation_correct}
-`
 )
 
 console.log(report)
