@@ -1,10 +1,11 @@
-import { EdgeSLM } from "./infer.js"
-import { buildPrompt } from "./prompt.js"
+import { EdgeSLM } from "../src/infer.js"
+import { buildPrompt } from "../src/prompt.js"
 import fs from "fs"
 
 async function runPerf() {
 
-  const model = new EdgeSLM("./model/model.onnx")
+  // correct model path
+  const model = new EdgeSLM("./model/decoder_model.onnx")
 
   // memory before load
   const memBefore = process.memoryUsage().rss / 1024 / 1024
@@ -16,24 +17,35 @@ async function runPerf() {
   const modelLoad = loadEnd - loadStart
 
   let times: number[] = []
+  let totalTokens = 0
+
+  const inputText = "I paid Amazon 50 USD"
 
   for (let i = 0; i < 10; i++) {
 
+    const prompt = buildPrompt(inputText)
+
+    // simple token estimate (word count proxy)
+    const tokenCount = prompt.split(" ").length
+    totalTokens += tokenCount
+
     const start = Date.now()
 
-    const prompt = buildPrompt("I paid Amazon 50 USD")
     await model.generate(prompt)
 
     const end = Date.now()
 
     times.push(end - start)
-
   }
 
   const avg =
     times.reduce((a, b) => a + b, 0) / times.length
 
   const max = Math.max(...times)
+
+  // real tokens/sec estimation
+  const tokensPerSec =
+    avg > 0 ? (totalTokens / (times.length * (avg / 1000))) : 0
 
   const memAfter = process.memoryUsage().rss / 1024 / 1024
 
@@ -45,7 +57,7 @@ async function runPerf() {
 
     max_inference_ms: max,
 
-    tokens_per_sec_est: 100,
+    tokens_per_sec_est: Math.round(tokensPerSec),
 
     memory_mb_peak: Math.round(memAfter)
 

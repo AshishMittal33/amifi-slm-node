@@ -21,7 +21,7 @@ async function makeBundle() {
 
   const files = [
 
-    "model/model.onnx",
+    "model/decoder_model.onnx",
     "prompts/system.txt",
     "prompts/developer.txt",
     "prompts/fewshot.json"
@@ -41,7 +41,7 @@ async function makeBundle() {
 
   const output = fs.createWriteStream("dist/bundle.zip")
 
-  const archive = archiver("zip")
+  const archive = archiver("zip", { zlib: { level: 9 } })
 
   archive.pipe(output)
 
@@ -51,7 +51,7 @@ async function makeBundle() {
 
   await archive.finalize()
 
-  console.log("Bundle created")
+  console.log("Bundle created successfully")
 
 }
 
