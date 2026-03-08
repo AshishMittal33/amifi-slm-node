@@ -3,6 +3,10 @@
 ## Download link:
 https://drive.google.com/file/d/1gzaZUl9qOZ0QXaxsSOGuBUslem8eAi0g/view?usp=sharing
 
+## Demo
+
+https://youtu.be/8w5a5aa-x3Q
+
 ## Overview
 
 This project implements a minimal Edge Small Language Model (SLM) inference pipeline using Node.js + TypeScript + ONNX Runtime.
